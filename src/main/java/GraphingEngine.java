@@ -1,3 +1,6 @@
+import DataSets.GenericDataSet;
+import DataSets.NumericalDataSet;
+
 import java.util.TreeMap;
 
 public class GraphingEngine {
@@ -9,12 +12,14 @@ public class GraphingEngine {
 	public static final String CHARACTER_TO_PRINT = "█";
 	public static int PRECISION = 1;
 
-	public static void histogram(DataSet set, ChartData data) {
-		set = set.getSorted();
+	public static int BOX_PLOT_HEIGHT = 5;
 
-		TreeMap<Double, Integer> freqs = new TreeMap<>(set.frequency());
+	public static <T> void histogram(GenericDataSet<T> set, ChartData data) {
+		boolean numeric = set instanceof NumericalDataSet;
 
-		Double[] keys = freqs.keySet().toArray(Double[]::new);
+		TreeMap<T, Integer> freqs = new TreeMap<>(set.frequency());
+
+		T[] keys = (T[]) freqs.keySet().toArray(Object[]::new);
 		Integer[] values = freqs.values().toArray(Integer[]::new);
 
 		System.out.println("\t\t" + data.getChartName());
@@ -22,8 +27,14 @@ public class GraphingEngine {
 		int maxFreq = freqs.values().stream().max(Integer::compareTo).get();
 		int maxFreqLength = (maxFreq+"").length();
 
-		System.out.println(" ".repeat(maxFreqLength-1) + "  _");
+		System.out.println(" \t" + " ".repeat(maxFreqLength-1) + "  _");
 		for (int i = maxFreq; i > 0; i--) {
+			System.out.print(
+					maxFreq-i >= data.getVerticalAxisName().length()
+							? " \t"
+							: data.getVerticalAxisName().charAt(maxFreq-i) + "\t"
+			);
+
 			System.out.printf(
 					maxFreqLength != (i+"").length()
 							? "0".repeat(maxFreqLength-1) + "%d |"
@@ -31,10 +42,12 @@ public class GraphingEngine {
 					, i);
 
 			for (int j = 0; j < keys.length; j++) {
-				double value = keys[j];
+				T value = keys[j];
 				int freq = values[j];
 
-				int valueDigits = String.format("%." + PRECISION + "f", value).length();
+				int valueDigits = numeric
+						? String.format("%." + PRECISION + "f", value).length()
+						: value.toString().length();
 
 				System.out.print(
 						freq >= i
@@ -47,24 +60,38 @@ public class GraphingEngine {
 		}
 
 
-		System.out.printf("0".repeat(maxFreqLength-1) + "0 +");
+		System.out.print(" \t" + "0".repeat(maxFreqLength-1) + "0 +");
 
-		for (double value : keys) {
-			int valueDigits = String.format("%." + PRECISION + "f", value).length();
+		for (T value : keys) {
+			int valueDigits = numeric
+					? String.format("%." + PRECISION + "f", value).length()
+					: value.toString().length();
 
 			System.out.print("--" + "-".repeat(valueDigits));
 		}
 
 
-		System.out.print("|\n   " + " ".repeat(maxFreqLength-1));
-		for (double value : keys) {
-			System.out.printf(" %." + PRECISION + "f ", value);
+		System.out.print("|\n \t" + " ".repeat(maxFreqLength-1) + "   ");
+		if (numeric) {
+			for (T value : keys) {
+				System.out.printf(" %." + PRECISION + "f ", value);
+			}
+		} else {
+			for (T value : keys) {
+				System.out.print(" " + value + " ");
+			}
 		}
 
 		System.out.println("\n\n\t\t" + data.getHorizontalAxisName());
+	}
 
+	public static void boxplot(NumericalDataSet set, ChartData data) {
+		System.out.println("\t\t" + data.getChartName());
 
-
-
+		for (int i = 0; i < BOX_PLOT_HEIGHT; i++) {
+			for (int j = 0; j < (set.data().getRange() + 2) / X_LENGTH; j++) {
+				// TODO complete me
+			}
+		}
 	}
 }
